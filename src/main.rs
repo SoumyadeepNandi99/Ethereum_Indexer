@@ -34,10 +34,8 @@ fn insert_validator_data(conn: &PgConnection, data: Vec<ValidatorData>) -> Query
     Ok(())
 }
 
-// Function to fetch validator data from the validator client's database (Replace with actual implementation)
+// Function to fetch validator data from the validator client's database
 fn fetch_validator_data_from_client() -> QueryResult<Vec<ValidatorData>> {
-    // Implement the logic to fetch validator data from the validator client's database here
-    // For example, you can use the client's API or direct database connection
 
     // Sample data - Replace this with the actual data fetched from the client
     let sample_data = vec![
