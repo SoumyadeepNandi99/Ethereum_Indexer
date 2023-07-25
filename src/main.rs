@@ -14,6 +14,62 @@ struct ParticipationRateResponse {
     participation_rate: f64,
 }
 
+#[derive(Debug, Deserialize)]
+struct ValidatorData {
+    id: i32,
+    public_key: String,
+    missed_attestations: i32,
+}
+
+// Function to insert validator data into the database
+fn insert_validator_data(conn: &PgConnection, data: Vec<ValidatorData>) -> QueryResult<()> {
+    use schema::validators::dsl::*;
+
+    diesel::insert_into(validators)
+        .values(data)
+        .on_conflict(id)
+        .do_nothing()
+        .execute(conn)?;
+
+    Ok(())
+}
+
+// Function to fetch validator data from the validator client's database (Replace with actual implementation)
+fn fetch_validator_data_from_client() -> QueryResult<Vec<ValidatorData>> {
+    // Implement the logic to fetch validator data from the validator client's database here
+    // For example, you can use the client's API or direct database connection
+
+    // Sample data - Replace this with the actual data fetched from the client
+    let sample_data = vec![
+        ValidatorData {
+            id: 1,
+            public_key: "0xabc...".to_string(),
+            missed_attestations: 5,
+        },
+        ValidatorData {
+            id: 2,
+            public_key: "0xdef...".to_string(),
+            missed_attestations: 2,
+        },
+        // Add more validators as needed
+    ];
+
+    Ok(sample_data)
+}
+
+// Function to populate the database with validator data from the validator client
+fn populate_database(pool: &Pool) -> QueryResult<()> {
+    let conn = pool.get().expect("couldn't get db connection from pool");
+
+    // Fetch validator data from the validator client's database
+    let validator_data = fetch_validator_data_from_client()?;
+    
+    // Insert the fetched data into the database
+    insert_validator_data(&conn, validator_data)?;
+
+    Ok(())
+}
+
 // API route to get the entire network’s participation rate
 async fn get_network_participation_rate(pool: web::Data<Pool>) -> impl Responder {
     let conn = pool.get().expect("couldn't get db connection from pool");
@@ -64,6 +120,9 @@ async fn main() -> std::io::Result<()> {
     let pool = r2d2::Pool::builder()
         .build(manager)
         .expect("Failed to create pool.");
+
+    // Populate the database with validator data from the validator client on startup
+    populate_database(&pool).expect("Failed to populate database");
 
     HttpServer::new(move || {
         App::new()
